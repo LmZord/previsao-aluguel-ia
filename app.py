@@ -94,7 +94,7 @@ if enviar:
                     "Vagas": vagas, "Condomínio": condominio}
     if tipo == "Apartamento":
         obrigatorios["Andar"] = andar
-            vazios = [nome for nome, valor in obrigatorios.items() if valor is None]
+        vazios = [nome for nome, valor in obrigatorios.items() if valor is None]
     if vazios:
         erros.append("Preencha os campos: " + ", ".join(vazios) + ".")
     if area is not None and area < 10:
