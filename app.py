@@ -1,3 +1,35 @@
+"""
+Aplicativo Streamlit — Estimativa do valor do aluguel no Brasil
+Trabalho prático 1 — Tópicos Avançados em Inteligência Artificial
+
+Executar localmente:  streamlit run app.py
+Arquivos necessários:  app.py, requirements.txt, modelo/modelo_aluguel.pkl (gerado pelo notebook)
+"""
+
+import joblib
+import numpy as np
+import pandas as pd
+import streamlit as st
+
+# ---------------------------------------------------------------------------
+# 1. Configuração da página
+# ---------------------------------------------------------------------------
+st.set_page_config(page_title="Estimativa de Aluguel", page_icon="🏠", layout="centered")
+CAMINHO_MODELO = "modelo/modelo_aluguel.pkl"
+
+
+# ---------------------------------------------------------------------------
+# 2. Carregamento do modelo (uma vez; cada consulta só faz a inferência)
+# ---------------------------------------------------------------------------
+@st.cache_resource
+def carregar_modelo():
+    return joblib.load(CAMINHO_MODELO)
+
+
+try:
+    pacote = carregar_modelo()
+except FileNotFoundError:
+    st.error(f"Arquivo do modelo não encontrado em '{CAMINHO_MODELO}'. Execute o notebook e envie o .pkl.")
     st.stop()
 
 modelo, faixas, metricas = pacote["modelo"], pacote["faixas"], pacote["metricas_teste"]
@@ -62,7 +94,7 @@ if enviar:
                     "Vagas": vagas, "Condomínio": condominio}
     if tipo == "Apartamento":
         obrigatorios["Andar"] = andar
-    vazios = [nome for nome, valor in obrigatorios.items() if valor is None]
+            vazios = [nome for nome, valor in obrigatorios.items() if valor is None]
     if vazios:
         erros.append("Preencha os campos: " + ", ".join(vazios) + ".")
     if area is not None and area < 10:
@@ -109,13 +141,15 @@ if enviar:
     c1.metric("Aluguel estimado", f"R$ {previsao:,.0f}".replace(",", "."))
     c2.metric("Aluguel + condomínio", f"R$ {previsao + condominio:,.0f}".replace(",", "."))
     faixa_min, faixa_max = previsao * (1 - erro_pct), previsao * (1 + erro_pct)
-    # Escapa o símbolo $ para não ser interpretado como expressão LaTeX pelo Streamlit.
-    texto_faixa = (
-        f"Faixa típica de preço para um imóvel assim: "
-        f"**R$ {faixa_min:,.0f} a R$ {faixa_max:,.0f}** "
-        f"(o modelo erra cerca de {metricas['Erro % mediano']:.0f}% em metade dos casos)."
+    # Exibição monetária em métricas evita que o Streamlit interprete "$" como LaTeX.
+    st.write("Faixa estimada de preços para um imóvel com essas características:")
+    col_min, col_max = st.columns(2)
+    col_min.metric("Limite inferior", f"R$ {faixa_min:,.0f}".replace(",", "."))
+    col_max.metric("Limite superior", f"R$ {faixa_max:,.0f}".replace(",", "."))
+    st.caption(
+        f"Intervalo ilustrativo de ±{metricas['Erro % mediano']:.0f}% em torno da previsão, "
+        "calculado com o erro percentual mediano no teste; não é uma garantia de preço."
     )
-    st.markdown(texto_faixa.replace(",", ".").replace("$", r"\$"))
     st.write(f"Valor por m²: **R$ {previsao / area:,.2f}**".replace(",", "X").replace(".", ",").replace("X", "."))
     st.info("Se o anúncio que você está avaliando está **bem acima da faixa**, ele pode estar caro — ou ter "
             "algo que o modelo não conhece (bairro nobre, reforma, lazer completo).")
@@ -126,3 +160,8 @@ if enviar:
 # 9. Limitações
 # ---------------------------------------------------------------------------
 st.divider()
+st.caption(
+    "**Limitações:** baseado em anúncios de 2020 (sem correção pela inflação), apenas 5 cidades e sem "
+    "informação de bairro, conservação ou lazer do prédio — fatores que mudam muito o preço. O valor é uma "
+    "estimativa estatística, não uma avaliação imobiliária."
+)
