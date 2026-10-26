@@ -147,8 +147,7 @@ if enviar:
     col_min.metric("Limite inferior", f"R$ {faixa_min:,.0f}".replace(",", "."))
     col_max.metric("Limite superior", f"R$ {faixa_max:,.0f}".replace(",", "."))
     st.caption(
-        f"Intervalo ilustrativo de ±{metricas['Erro % mediano']:.0f}% em torno da previsão, "
-        "calculado com o erro percentual mediano no teste; não é uma garantia de preço."
+        f"A faixa apresentada é uma estimativa ilustrativa baseada no desempenho do modelo e não representa uma garantia do valor real de mercado."
     )
     st.write(f"Valor por m²: **R$ {previsao / area:,.2f}**".replace(",", "X").replace(".", ",").replace("X", "."))
     st.info("Se o anúncio que você está avaliando está **bem acima da faixa**, ele pode estar caro — ou ter "
